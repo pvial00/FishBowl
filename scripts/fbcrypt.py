@@ -1,7 +1,8 @@
-from fishbowl import FishBowl
+from fishbowl import FishBowl, FishBowlKDF
 import sys, select, getpass, os, time, getopt, re
 
 ivlen = 20
+keylen = 26
 
 def geniv(ivlen):
     iv = []
@@ -44,6 +45,7 @@ except IndexError as ier:
     key = getpass.getpass("Enter key: ")
 
 fb = FishBowl()
+key = FishBowlKDF().kdf(key, keylen)
 
 start = time.time()
 data = infile.read()

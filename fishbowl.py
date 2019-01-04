@@ -201,3 +201,15 @@ class FishBowl:
             ctxt.append(self.tochars(block1))
             ctxt.append(self.tochars(block2))
         return "".join(ctxt)
+
+class FishBowlKDF:
+    def kdf(self, password, keylen=26, iterations=10):
+        diff = keylen - len(password)
+        iv = "AAAAAAAAAAAAAAAAAAAA"
+        for x in xrange(diff):
+            password += "A"
+        fb = FishBowl()
+        key = password
+        for i in xrange(iterations):
+            key = fb.encrypt(key[:keylen], key, iv)
+        return key
