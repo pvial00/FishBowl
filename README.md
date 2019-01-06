@@ -13,7 +13,7 @@ One FishBowl round consists of the following operations:
 - Left and Right halves are swapped
 
 
-Currently, FishBowl is available in CBC mode only.
+Currently, FishBowl is available in CBC and OFB modes.
 
 # fbcrypt.py usage
 
