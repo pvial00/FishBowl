@@ -1,6 +1,6 @@
 class FishBowlOFB:
     rounds = 10
-    blocklen = 10
+    blocklen = 20
     shift = 3
     def tonums(self, key):
         k = []
@@ -88,12 +88,13 @@ class FishBowlOFB:
         c = 0
         klen = len(k)
         blocklen = self.blocklen
-        blocks = (len(secret) / blocklen) / 2
-        extra = (blocklen * 2) - (len(secret) % (blocklen * 2))
+        blocks = (len(secret) / blocklen)
+        bl = blocklen / 2
+        extra = (blocklen) - (len(secret) % (blocklen))
         if extra != 0:
             blocks += 1
         s1 = 0
-        e1 = blocklen * 2
+        e1 = blocklen
         self.S = self.gensbox(key, blocklen)
         self.roundkeys = self.genRkeys(key, self.rounds, blocklen)
         for x in xrange(len(self.roundkeys)):
@@ -103,22 +104,16 @@ class FishBowlOFB:
         block2 = list(IV[len(IV) / 2:])
         for x in range(blocks):
             block = self.tonums(secret[s1:e1])
-            s1 += blocklen * 2
-            e1 += blocklen * 2
-            #for y in xrange(blocklen):
-            #    block1[y] = (block1[y] + previous_block[y]) % 26
-            #for y in xrange(blocklen):
-            #    block2[y] = (block2[y] + previous_block[y + blocklen]) % 26
+            s1 += blocklen
+            e1 += blocklen
 
             for r in xrange(self.rounds):
-                block1, block2 = self.roundenc(block1, block2, blocklen, r)
-            #previous_block = list(block1)
-            #previous_block.extend(block2)
+                block1, block2 = self.roundenc(block1, block2, bl, r)
             k = list(block1)
             k.extend(block2)
             if x == (blocks - 1):
                 blocklen = len(block)
-            for y in xrange(blocklen * 2):
+            for y in xrange(blocklen):
                 block[y] = (block[y] + k[y]) % 26
                 
             ctxt.append(self.tochars(block))
@@ -131,11 +126,12 @@ class FishBowlOFB:
         c = 0
         klen = len(k)
         blocklen = self.blocklen
-        blocks = len(secret) / (blocklen * 2)
+        blocks = len(secret) / (blocklen)
+        bl = blocklen / 2
         if blocks == 0:
             blocks += 1
         s1 = 0
-        e1 = blocklen * 2
+        e1 = blocklen
         self.S = self.gensbox(key, blocklen)
         self.roundkeys = self.genRkeys(key, self.rounds, blocklen)
         for x in xrange(len(self.roundkeys)):
@@ -144,15 +140,15 @@ class FishBowlOFB:
         block2 = list(IV[len(IV) / 2:])
         for x in range(blocks):
             block = self.tonums(secret[s1:e1])
-            s1 += blocklen * 2
-            e1 += blocklen * 2
-            for r in reversed(xrange(self.rounds)):
-                block1, block2 = self.rounddec(block1, block2, blocklen, r)
+            s1 += blocklen
+            e1 += blocklen
+            for r in xrange(self.rounds):
+                block1, block2 = self.roundenc(block1, block2, bl, r)
             k = list(block1)
             k.extend(block2)
             if x == (blocks - 1):
                 blocklen = len(block)
-            for y in xrange(blocklen * 2):
+            for y in xrange(blocklen):
                 block[y] = (block[y] - k[y]) % 26
             ctxt.append(self.tochars(block))
         return "".join(ctxt)
