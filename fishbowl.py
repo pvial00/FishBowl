@@ -183,7 +183,7 @@ class FishBowl:
             e2 += blocklen * 2
             last_block = list(block1)
             last_block.extend(block2)
-            for r in reversed(xrange(self.rounds)):
+            for r in reversed(range(self.rounds)):
                 block1, block2 = self.rounddec(block1, block2, blocklen, r)
             for y in range(blocklen):
                 block1[y] = (block1[y] - previous_block[y]) % 26
