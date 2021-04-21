@@ -4,63 +4,83 @@ class FishBowl:
     shift = 3
     def tonums(self, key):
         k = []
-        for x in xrange(len(key)):
+        for x in range(len(key)):
             k.append(ord(key[x]) - 65)
         return k
     
     def genRkeys(self, key, rounds, blocklen):
-        k = []
-        for x in xrange(len(key)):
-            k.append(ord(key[x]) - 65)
+        k = [0] * len(key)
+        j = 0
+        for c, byte in enumerate(key):
+            k[c] = (k[c] + (ord(byte) - 65)) % 26
+            j = (j + (ord(byte) - 65)) % 26
         roundkeys = []
-        for r in xrange(rounds):
+        for r in range(rounds):
             rk = [0] * blocklen
             c = 0
-            for x in xrange(len(k)):
-                k[x] = (k[x] + k[x]) % 26
-            for x in xrange(blocklen):
-                rk[x] = (rk[x] + k[c]) % 26
+            for x in range(26):
+                j = k[j]
+                k[j] = (k[c] + k[j]) % 26
+                output = (k[j] + k[k[j]]) % 26
+                k[c] = (k[c] + output) % 26
+                self.rotate(k, self.shift)
+                c = (c + 1) % 26
+            for x in range(100 * 26):
+                j = k[j]
+                k[j] = (k[c] + k[j]) % 26
+                output = (k[j] + k[k[j]]) % 26
+                k[c] = (k[c] + output) % 26
+                self.rotate(k, self.shift)
+                c = (c + 1) % 26
+            for x in range(blocklen):
+                j = k[j]
+                k[j] = (k[c] + k[j]) % 26
+                output = (k[j] + k[k[j]]) % 26
+                self.rotate(k, self.shift)
+                rk[x] = (rk[x] + output) % 26
                 c = (c + 1) % len(k)
             roundkeys.append(rk)
         return roundkeys
 
     def gensbox(self, key, blocklen):
         S = []
-        k = self.tonums(key)
-        klen = len(k)
+        k = [0] * len(key)
         j = 0
+        for c, byte in enumerate(key):
+            k[c] = (k[c] + (ord(byte) - 65)) % 26
+            j = (j + (ord(byte) - 65)) % 26
         c = 0
-        for el in k:
-            j = (j + el) % 26
-        for x in xrange(blocklen):
-            box = range(26)
-            for y in xrange(26):
-                k[c % klen] = (k[c % klen] + k[(c + 1) % klen]) % 26
-                j = (j + k[c % klen]) % 26
-                box[c], box[j] = box[j], box[c]
+        for x in range(blocklen):
+            box = list(range(26))
+            for y in range(26):
+                j = k[j]
+                k[j] = (k[j] + k[c]) % 26
+                output = (k[j] + k[k[j]]) % 26
+                self.rotate(k, self.shift)
+                box[c], box[output] = box[output], box[c]
                 c = (c + 1) % 26
             S.append(box)
         return S
 
     def subblock(self, block, S, blocklen):
         b = list(block)
-        for x in xrange(blocklen):
+        for x in range(blocklen):
             b[x] = S[x][b[x]]
         return b
 
     def rotate(self, block, r):
-        for x in xrange(r):
+        for x in range(r):
             block.append(block.pop(0))
         return block
 
     def rotateback(self, block, r):
-        for x in xrange(r):
+        for x in range(r):
             block.insert(0, block.pop())
         return block
 
     def roundenc(self, left, right, blocklen, r):
         right = self.rotate(right, self.shift)
-        for x in xrange(blocklen):
+        for x in range(blocklen):
             right[x] = (right[x] + self.roundkeys[r][x]) % 26
             left[x] = self.S[x][left[x]]
             left[x] = (left[x] + right[x]) % 26
@@ -68,7 +88,7 @@ class FishBowl:
         return right, left
     
     def rounddec(self, left, right, blocklen, r):
-        for x in reversed(xrange(blocklen)):
+        for x in reversed(range(blocklen)):
             left[x] = (left[x] - right[x]) % 26
             right[x] = (right[x] - left[x]) % 26
             right[x] = self.S[x].index(right[x])
@@ -77,7 +97,7 @@ class FishBowl:
         return right, left
 
     def tochars(self, nums):
-        for x in xrange(len(nums)):
+        for x in range(len(nums)):
             nums[x] = chr(nums[x] + 65)
         return "".join(nums)
 
@@ -88,7 +108,7 @@ class FishBowl:
         c = 0
         klen = len(k)
         blocklen = self.blocklen
-        blocks = (len(secret) / blocklen) / 2
+        blocks = int((len(secret) / blocklen) / 2)
         extra = (blocklen * 2) - (len(secret) % (blocklen * 2))
         if extra != 0:
             blocks += 1
@@ -98,7 +118,7 @@ class FishBowl:
         e2 = blocklen * 2
         self.S = self.gensbox(key, blocklen)
         self.roundkeys = self.genRkeys(key, self.rounds, blocklen)
-        for x in xrange(len(self.roundkeys)):
+        for x in range(len(self.roundkeys)):
             self.subblock(self.roundkeys[x], self.S, blocklen)
             
         previous_block = list(IV)
@@ -114,20 +134,20 @@ class FishBowl:
                     if extra > (blocklen):
                         d = (blocklen * 2) - extra
                         d1 = blocklen - (d % blocklen)
-                        for b in xrange(d1):
+                        for b in range(d1):
                             block1.append(extra)
-                        for b in xrange(blocklen):
+                        for b in range(blocklen):
                             block2.append(extra)
                     elif extra <= blocklen:
-                        for b in xrange(extra):
+                        for b in range(extra):
                             block2.append(extra)
 
-            for y in xrange(blocklen):
+            for y in range(blocklen):
                 block1[y] = (block1[y] + previous_block[y]) % 26
-            for y in xrange(blocklen):
+            for y in range(blocklen):
                 block2[y] = (block2[y] + previous_block[y + blocklen]) % 26
 
-            for r in xrange(self.rounds):
+            for r in range(self.rounds):
                 block1, block2 = self.roundenc(block1, block2, blocklen, r)
             previous_block = list(block1)
             previous_block.extend(block2)
@@ -142,7 +162,7 @@ class FishBowl:
         c = 0
         klen = len(k)
         blocklen = self.blocklen
-        blocks = len(secret) / (blocklen * 2)
+        blocks = int(len(secret) / (blocklen * 2))
         if blocks == 0:
             blocks += 1
         s1 = 0
@@ -151,7 +171,7 @@ class FishBowl:
         e2 = blocklen * 2
         self.S = self.gensbox(key, blocklen)
         self.roundkeys = self.genRkeys(key, self.rounds, blocklen)
-        for x in xrange(len(self.roundkeys)):
+        for x in range(len(self.roundkeys)):
             self.subblock(self.roundkeys[x], self.S, blocklen)
         previous_block = list(IV)
         for x in range(blocks):
@@ -165,16 +185,16 @@ class FishBowl:
             last_block.extend(block2)
             for r in reversed(xrange(self.rounds)):
                 block1, block2 = self.rounddec(block1, block2, blocklen, r)
-            for y in xrange(blocklen):
+            for y in range(blocklen):
                 block1[y] = (block1[y] - previous_block[y]) % 26
-            for y in xrange(blocklen):
+            for y in range(blocklen):
                 block2[y] = (block2[y] - previous_block[y + blocklen]) % 26
             if x == (blocks - 1):
                 mark = block2[len(block2) - 1]
                 count = 0
                 if mark <= blocklen:
                     m = blocklen - 1
-                    for b in xrange(mark):
+                    for b in range(mark):
                         if block2[m] == mark:
                             count += 1
                             m = m - 1
@@ -182,14 +202,14 @@ class FishBowl:
                         block2 = block2[:(len(block2) - mark)]
                 elif mark > blocklen:
                     m = blocklen - 1
-                    for b in xrange(blocklen):
+                    for b in range(blocklen):
                         if block2[m] == mark:
                             count += 1
                             m = m - 1
                     m = (blocklen) - 1
                     d = (blocklen * 2) - mark
                     d1 = blocklen - d
-                    for b in xrange(d1):
+                    for b in range(d1):
                         if block1[m] == mark:
                             count += 1
                             m = m - 1
@@ -206,10 +226,10 @@ class FishBowlKDF:
     def kdf(self, password, keylen=26, iterations=10):
         diff = keylen - len(password)
         iv = "AAAAAAAAAAAAAAAAAAAA"
-        for x in xrange(diff):
+        for x in range(diff):
             password += "A"
         fb = FishBowl()
         key = password
-        for i in xrange(iterations):
+        for i in range(iterations):
             key = fb.encrypt(key[:keylen], key, iv)
         return key
