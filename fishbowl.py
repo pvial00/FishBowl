@@ -23,20 +23,20 @@ class FishBowl:
                 k[j] = (k[c] + k[j]) % 26
                 output = (k[j] + k[k[j]]) % 26
                 k[c] = (k[c] + output) % 26
-                self.rotate(k, self.shift)
+                k = self.rotate(k, self.shift)
                 c = (c + 1) % 26
             for x in range(100 * 26):
                 j = k[j]
                 k[j] = (k[c] + k[j]) % 26
                 output = (k[j] + k[k[j]]) % 26
                 k[c] = (k[c] + output) % 26
-                self.rotate(k, self.shift)
+                k = self.rotate(k, self.shift)
                 c = (c + 1) % 26
             for x in range(blocklen):
                 j = k[j]
                 k[j] = (k[c] + k[j]) % 26
                 output = (k[j] + k[k[j]]) % 26
-                self.rotate(k, self.shift)
+                k = self.rotate(k, self.shift)
                 rk[x] = (rk[x] + output) % 26
                 c = (c + 1) % len(k)
             roundkeys.append(rk)
