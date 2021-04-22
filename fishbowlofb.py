@@ -9,35 +9,55 @@ class FishBowlOFB:
         return k
     
     def genRkeys(self, key, rounds, blocklen):
-        k = []
-        for x in xrange(len(key)):
-            k.append(ord(key[x]) - 65)
+        k = [0] * len(key)
+        j = 0
+        for c, byte in enumerate(key):
+            k[c] = (k[c] + (ord(byte) - 65)) % 26
+            j = (j + (ord(byte) - 65)) % 26
         roundkeys = []
-        for r in xrange(rounds):
+        for r in range(rounds):
             rk = [0] * blocklen
             c = 0
-            for x in xrange(len(k)):
-                k[x] = (k[x] + k[x]) % 26
-            for x in xrange(blocklen):
-                rk[x] = (rk[x] + k[c]) % 26
+            for x in range(26):
+                j = k[j]
+                k[j] = (k[c] + k[j]) % 26
+                output = (k[j] + k[k[j]]) % 26
+                k[c] = (k[c] + output) % 26
+                k = self.rotate(k, self.shift)
+                c = (c + 1) % 26
+            for x in range(100 * 26):
+                j = k[j]
+                k[j] = (k[c] + k[j]) % 26
+                output = (k[j] + k[k[j]]) % 26
+                k[c] = (k[c] + output) % 26
+                k = self.rotate(k, self.shift)
+                c = (c + 1) % 26
+            for x in range(blocklen):
+                j = k[j]
+                k[j] = (k[c] + k[j]) % 26
+                output = (k[j] + k[k[j]]) % 26
+                k = self.rotate(k, self.shift)
+                rk[x] = (rk[x] + output) % 26
                 c = (c + 1) % len(k)
             roundkeys.append(rk)
         return roundkeys
 
     def gensbox(self, key, blocklen):
         S = []
-        k = self.tonums(key)
-        klen = len(k)
+        k = [0] * len(key)
         j = 0
+        for c, byte in enumerate(key):
+            k[c] = (k[c] + (ord(byte) - 65)) % 26
+            j = (j + (ord(byte) - 65)) % 26
         c = 0
-        for el in k:
-            j = (j + el) % 26
-        for x in xrange(blocklen):
-            box = range(26)
-            for y in xrange(26):
-                k[c % klen] = (k[c % klen] + k[(c + 1) % klen]) % 26
-                j = (j + k[c % klen]) % 26
-                box[c], box[j] = box[j], box[c]
+        for x in range(blocklen):
+            box = list(range(26))
+            for y in range(26):
+                j = k[j]
+                k[j] = (k[j] + k[c]) % 26
+                output = (k[j] + k[k[j]]) % 26
+                self.rotate(k, self.shift)
+                box[c], box[output] = box[output], box[c]
                 c = (c + 1) % 26
             S.append(box)
         return S
